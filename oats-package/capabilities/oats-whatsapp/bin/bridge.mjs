@@ -201,7 +201,10 @@ async function kapsoListen(settings, labelOf, inbound, note, log) {
     if (!secret || !verifyHmac(raw, sig, secret)) { log("warn", "kapso: webhook with a bad or missing signature refused"); res.writeHead(401); return res.end(); }
     res.writeHead(200); res.end();
     const ev = parseJson(raw.toString("utf8"));
-    if (!ev || ev.type !== "whatsapp.message.received") return;
+    // Kapso names the event in the X-Webhook-Event header; the body carries no top-level `type` (payload v1 and v2 alike,
+    // checked on the wire 2026-10-23; the delivery log's request_body shows one, the request doesn't).
+    const type = ev?.type || req.headers["x-webhook-event"];
+    if (!ev || type !== "whatsapp.message.received") { log("warn", `kapso: webhook ignored (event ${type || "unknown"})`); return; }
     const entries = ev.batch ? (Array.isArray(ev.data) ? ev.data : []) : [ev.data || ev];
     for (const d of entries) {
       const m = d?.message || {};

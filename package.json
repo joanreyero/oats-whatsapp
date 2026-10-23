@@ -1,0 +1,15 @@
+{
+  "name": "@joanreyero/oats-whatsapp",
+  "version": "0.1.0",
+  "description": "OATS capability package oats.whatsapp: a WhatsApp chat between a human and a resident OATS instance (Kapso, official Cloud API; wacli as the local adapter). OATS resolves it from this repository's git tag; this npm package is a mirror of the same payload.",
+  "license": "MIT",
+  "author": "Joan Reyero <joan@reyero.io>",
+  "repository": { "type": "git", "url": "git+https://github.com/joanreyero/oats-whatsapp.git" },
+  "homepage": "https://github.com/joanreyero/oats-whatsapp#readme",
+  "bugs": "https://github.com/joanreyero/oats-whatsapp/issues",
+  "keywords": ["oats", "aweb", "whatsapp", "kapso", "wacli", "agents"],
+  "type": "module",
+  "files": ["oats-package", "README.md", "CHANGELOG.md", "LICENSE"],
+  "engines": { "node": ">=20.19" },
+  "publishConfig": { "access": "public" }
+}

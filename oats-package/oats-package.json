@@ -1,0 +1,11 @@
+{
+  "package": "oats.whatsapp",
+  "version": "0.1.0",
+  "description": "A WhatsApp chat between a human and a resident OATS instance: a host bridge turns inbound WhatsApp messages into aweb mail that wakes the bound instance, and sends its replies back (oats whatsapp send). Adapters: kapso (the agent's own number, official WhatsApp Cloud API) and wacli (the human's own linked account).",
+  "compatibility": {
+    "oats": ">=0.43.3"
+  },
+  "capabilities": [
+    "capabilities/oats-whatsapp"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "capability": "oats.whatsapp",
+  "command": "whatsapp",
+  "version": "0.1.0",
+  "compatibility": { "oats": ">=0.43.3" },
+  "launchPreview": true,
+  "description": "A WhatsApp chat between a human and a resident OATS instance: a host bridge turns the human's WhatsApp messages into aweb mail to the bound instance (its own messaging delivery wakes it) and sends the instance's replies back to the same chat (oats whatsapp send). Adapters: kapso (the agent's own number through Kapso, the official WhatsApp Cloud API) and wacli (the human's own linked account, a local mirror). Bindings are host facts in oats-local.yaml settings.oats.whatsapp.",
+  "requires": [
+    { "command": "aw", "why": "the bridge sends inbound WhatsApp messages as aweb mail from the deployment's root identity", "install": "https://aweb.ai/docs (aw CLI)" }
+  ],
+  "skills": ["skills/oats-whatsapp"],
+  "inject": "injects/whatsapp.md",
+  "commands": {
+    "send": "bin/whatsapp.mjs send",
+    "status": "bin/whatsapp.mjs status",
+    "bridge": "bin/whatsapp.mjs bridge"
+  },
+  "hooks": {
+    "launch": "bin/whatsapp.mjs launch",
+    "retire": "bin/whatsapp.mjs retire"
+  },
+  "settings": {
+    "adapter": { "default": "kapso", "values": ["kapso", "wacli"], "description": "How WhatsApp is reached on this host: kapso (the agent's own number through Kapso, official Cloud API; needs the kapso CLI, KAPSO_API_KEY and a webhook secret in the bridge's environment) or wacli (the human's own linked account through the wacli local mirror; needs wacli paired and wacli sync running)." },
+    "human": { "default": "the human", "description": "How the bridge names the person in the mail it sends the instance ([whatsapp] <human>: …)." },
+    "chats": { "default": {}, "description": "Chat label → id for the adapter in use: the human's phone in E.164 (+34…) for kapso, or a wacli chat JID (a group's …@g.us) for wacli. Host fact.", "hostOnly": true },
+    "bindings": { "default": {}, "description": "Instance name → chat label: which instance each chat wakes and where that instance's replies go. Host fact.", "hostOnly": true },
+    "chat": { "default": null, "description": "An ad-hoc binding for one spawn (oats spawn … --provider oats.whatsapp chat=<label>); bindings.<instance> wins when both name the instance." },
+    "port": { "default": 8788, "description": "The bridge's local API on 127.0.0.1: instances POST their replies to it; oats whatsapp status reads it." },
+    "stateDir": { "default": "~/.local/state/oats-whatsapp", "description": "Where the bridge keeps bindings, cursors and the ids of what it sent." },
+    "identityHome": { "default": null, "description": "The aweb identity the bridge sends mail as; default <deployment>/.aw, the root identity (takes no team seat).", "hostOnly": true },
+    "kapso": { "default": {}, "description": "kapso adapter: { phoneNumberId, webhookPort (default 8787), webhookPath (default /kapso) }. The API key and webhook secret come from the bridge's environment (KAPSO_API_KEY, OATS_WHATSAPP_KAPSO_WEBHOOK_SECRET), never from a file.", "hostOnly": true }
+  },
+  "retirement": { "disposable": { "home": [".oats-whatsapp"] } }
+}

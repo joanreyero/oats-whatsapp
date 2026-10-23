@@ -136,6 +136,7 @@ export async function runBridge(settings) {
 // neither re-mails the last message (--after is inclusive at second granularity) nor skips one.
 function wacliPoll(settings, sent, inbound, note, log) {
   const file = path.join(settings.stateDir, "wacli-cursors.json");
+  const phoneOnly = settings.wacli.from !== "any";
   const cursors = loadJson(file) || {};
   for (const c of Object.values(cursors)) if (!Array.isArray(c.seen)) c.seen = [];
   let busy = false;
@@ -159,6 +160,7 @@ function wacliPoll(settings, sent, inbound, note, log) {
           const text = (m.Text || m.DisplayText || "").trim() || (m.MediaType ? `[${m.MediaType}${m.MediaCaption ? `: ${m.MediaCaption}` : ""}]` : "");
           if (!text) continue;
           if (m.FromMe && sent.texts.some((o) => o.text === text && Date.now() - o.at < 120_000)) continue;   // our own reply, by text (both sides are the human's account)
+          if (phoneOnly && m.FromMe && !fromPhone(id)) { log("info", `chat ${label}: ${id} sent from a linked device, not the phone; ignored (settings.oats.whatsapp.wacli.from)`); continue; }
           inbound(label, { id, at: m.Timestamp, text, from: m.FromMe ? "me" : (m.SenderJID || "") });
         }
         if (changed) saveJson(file, cursors);
@@ -167,9 +169,15 @@ function wacliPoll(settings, sent, inbound, note, log) {
     finally { busy = false; }
   };
   const t = setInterval(tick, WACLI_POLL_MS); tick();
-  log("info", `wacli: polling ${Object.keys(settings.chats).length} chat(s) every ${WACLI_POLL_MS / 1000}s`);
+  log("info", `wacli: polling ${Object.keys(settings.chats).length} chat(s) every ${WACLI_POLL_MS / 1000}s; inbound = ${phoneOnly ? "messages sent from the phone only" : "every message not sent by the bridge"}`);
   return () => clearInterval(t);
 }
+
+// WhatsApp message ids tell the sending device apart: a phone (iOS, Android) generates 20- or 32-character ids; a linked
+// device (WhatsApp Web, whatsmeow, so every `wacli send` on the host) generates "3EB0" + 18 hex characters (22). A shape, not a
+// signature: it keeps another local process's `wacli send` (another agent, a script) from reading as the human; it is not a
+// security boundary against a process that forges ids, which the host already trusts.
+function fromPhone(id) { return !(typeof id === "string" && id.length === 22 && id.startsWith("3EB0")); }
 
 async function wacliSend(jid, text) {
   const r = await run("wacli", ["--json", "--timeout", "60s", "send", "text", "--to", jid, "--allow-self", "--no-preview", `--message=${text}`]);
@@ -202,7 +210,7 @@ async function kapsoListen(settings, labelOf, inbound, note, log) {
       const from = m.from || d?.conversation?.phone_number || k.phone_number;
       const label = labelOf(from);
       if (!label) { log("warn", `kapso: message from ${from} matches no chat in settings.oats.whatsapp.chats; ignored`); continue; }
-      const text = m.text?.body || m[m.type]?.caption || (m.type ? `[${m.type}]` : "");
+      const text = m.type === "text" ? (m.text?.body || "") : (m.type ? `[${m.type}${m[m.type]?.caption ? `: ${m[m.type].caption}` : ""}]` : "");
       if (!text) continue;
       const at = m.timestamp ? new Date(Number(m.timestamp) * 1000).toISOString() : new Date().toISOString();
       inbound(label, { id: m.id, at, text, from });

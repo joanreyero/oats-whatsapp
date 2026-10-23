@@ -38,10 +38,17 @@ wake broker) wakes it. Replies go back through the bridge's local API.
 - **wacli**: the **human's own account**, through
   [wacli](https://github.com/openclaw/wacli)'s local mirror (a linked device,
   `wacli sync --follow` running). The chat is a group the human is alone in; the
-  bridge polls the mirror read-only every 3 s and sends with `wacli send`, and
-  remembers its own replies (by id and by text) so it never mails an instance
-  what the instance just said. Unofficial client, personal account: a stop-gap
-  for low volume.
+  bridge polls the mirror read-only every 3 s and sends with `wacli send`.
+  Both sides of that chat are the same account, so **only messages sent from
+  the phone count as inbound** (`wacli.from: phone`, the default): a message
+  from a linked device, WhatsApp Web or any `wacli send` on the host included,
+  is ignored, told apart by WhatsApp's message-id shape (a phone's ids are 20
+  or 32 characters; a linked device's are `3EB0` + 18 hex). That is a shape,
+  not a signature: it stops another local process's `wacli send` from reading
+  as the human by accident, not a process that forges ids, which the host
+  already trusts. `wacli.from: any` turns it off (the bridge still skips its
+  own replies by id and by text). Unofficial client, personal account: a
+  stop-gap for low volume.
 
 ## Use it
 
@@ -50,7 +57,7 @@ Pin the package and give a soul the capability:
 ```yaml
 # oats-workspace.yaml
 packages:
-  oats.whatsapp: git:github.com/joanreyero/oats-whatsapp@v0.1.0   # bare `v0.1.0` once listed in the official catalog
+  oats.whatsapp: git:github.com/joanreyero/oats-whatsapp@v0.1.1   # bare `v0.1.0` once listed in the official catalog
 # souls/<name>/soul.yaml
 capabilities:
   oats.whatsapp: { from: package }
@@ -103,6 +110,7 @@ group, the checks, the errors) is the skill:
 | `stateDir` | `~/.local/state/oats-whatsapp` | bindings, cursors, sent ids, `bridge.log` |
 | `identityHome` (hostOnly) | `<deployment>/.aw` | the identity the bridge mails as |
 | `kapso` (hostOnly) | `{}` | `phoneNumberId`, `webhookPort` (8787), `webhookPath` (`/kapso`) |
+| `wacli` (hostOnly) | `{ from: phone }` | `from: phone` (only the phone's messages are inbound) or `any` |
 
 Environment of the bridge process (never files): `KAPSO_API_KEY`,
 `OATS_WHATSAPP_KAPSO_WEBHOOK_SECRET`. Host commands: `aw` (declared in the
@@ -115,8 +123,25 @@ manifest), plus `kapso` or `wacli` for the adapter in use.
 - Kapso webhooks are HMAC-SHA256 verified; with no secret every webhook is
   refused. Only senders listed in `chats` are routed.
 - The bridge's local API trusts the same user on the host (as the OATS wake
-  broker does) and only sends to the chat the named instance is bound to.
+  broker does): any local process can `POST /send` naming a bound instance
+  (`oats whatsapp send --instance <name>` does exactly that), and the bridge
+  only ever sends to the chat that instance is bound to. There is no
+  per-instance credential; a host that needs one is out of scope.
+- Under `adapter: wacli` the human's identity is the phone (above): what the
+  instance reads as "WhatsApp from <name>" is a message the phone sent into a
+  group the human is alone in, or a forged id by a local process. A decision
+  that must not rest on that (a merge, a payment) deserves the kapso adapter,
+  where the sender is the human's own number as Meta delivers it.
 - No credential is written anywhere; the instance never holds one.
+
+## Status
+
+v0.1.1. The wacli adapter is exercised end to end on a live account (a phone
+message into the group, the mail, the reply, dedupe, restart). The kapso adapter
+is exercised against Kapso's documented webhook payloads (single, batched,
+signed, unsigned, a stranger's number) with the Kapso CLI stubbed; it has not
+yet run against a live Kapso account. Media arrive as `[image: caption]`-style
+placeholders; nothing is sent back but text.
 
 ## Trust and maintainership
 
@@ -125,7 +150,7 @@ manifest), plus `kapso` or `wacli` for the adapter in use.
 - License: MIT (this package; it bundles no third-party code).
 - Releases are immutable tags `vX.Y.Z`; the payload root is `oats-package/`.
   Catalog entry for `package-catalog.json`:
-  `"oats.whatsapp": { "url": "https://github.com/joanreyero/oats-whatsapp.git", "ref": "v0.1.0", "path": "oats-package" }`.
+  `"oats.whatsapp": { "url": "https://github.com/joanreyero/oats-whatsapp.git", "ref": "v0.1.1", "path": "oats-package" }`.
 - External services: Kapso (Meta WhatsApp Cloud API) when `adapter: kapso`;
   WhatsApp through a linked device when `adapter: wacli`. Operator setup
   (accounts, numbers, a public webhook URL, secrets in a secret store) is

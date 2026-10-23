@@ -17,6 +17,7 @@ export function readSettings() {
     stateDir: expandHome(typeof s.stateDir === "string" && s.stateDir ? s.stateDir : "~/.local/state/oats-whatsapp"),
     identityHome: typeof s.identityHome === "string" && s.identityHome ? expandHome(s.identityHome) : null,
     kapso: isObj(s.kapso) ? s.kapso : {},
+    wacli: isObj(s.wacli) ? s.wacli : {},
     human: typeof s.human === "string" && s.human.trim() ? s.human.trim() : "the human",
   };
 }

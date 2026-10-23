@@ -27,4 +27,7 @@ an unbound instance (`E_NOT_BOUND`) and a bridge that is down answers
 Under the kapso adapter Meta's 24-hour rule applies: you can answer freely
 within 24 h of your human's last message; later, `E_WINDOW_CLOSED` means it
 needs a template, which the bridge does not send yet, so use your other
-route. Load `/oats-whatsapp` for the details and the troubleshooting.
+route. Under the wacli adapter (`oats whatsapp status` → `adapter`), "from
+your human" means a message their phone sent into a group they are alone in;
+a decision that must not rest on that belongs on the kapso adapter. Load
+`/oats-whatsapp` for the details and the troubleshooting.

@@ -34,6 +34,7 @@ WhatsApp ─(kapso webhook | wacli local DB)─▶ bridge ─▶ aw mail as the 
 ```bash
 oats whatsapp send --text "Merged acme/app#12: https://github.com/acme/app/pull/12"
 oats whatsapp send --body-file reply.txt
+oats whatsapp send --stdin < reply.txt
 oats whatsapp send --json ...            # { chat, adapter, id }
 oats whatsapp status [--json]            # bridge state, adapter, bindings, last inbound/outbound per chat, problems
 ```
@@ -64,6 +65,7 @@ settings:
     bindings: { acme-desk: joan }             # instance name → chat label
     port: 8788
     kapso: { phoneNumberId: "…", webhookPort: 8787 }
+    wacli: { from: phone }                    # or any
 ```
 
 - A plain capability has no soul payload, so a soul cannot bind itself;
@@ -107,9 +109,14 @@ Replies: `kapso whatsapp messages send --phone-number-id <id> --to <phone> --tex
 **wacli adapter** (the human's own account, a linked device): polls
 `wacli --read-only --json messages list --chat <jid> --after <t> --asc` every 3 s
 (read-only works while `wacli sync --follow` holds the store lock); the chat is
-a group the human is alone in; replies are `wacli send text --to <jid>`
-(delegated to the running sync) and are remembered by id and by text so the
-bridge never mails an instance its own reply. Creating a group needs the store
+a group the human is alone in. Only messages **sent from the phone** are
+inbound (`wacli.from: phone`, default): a linked device's message, any local
+`wacli send` included, is ignored by its id shape (`3EB0` + 18 hex), and the
+bridge's own replies are also remembered by id and by text. `wacli.from: any`
+counts every message not sent by the bridge. Replies are
+`wacli send text --to <jid>` (delegated to the running sync). The shape check
+is not a security boundary: a decision that must not rest on "the phone said
+so" (a merge, a payment) belongs on the kapso adapter. Creating a group needs the store
 lock: stop the sync, `wacli groups create --name …`, start it again. An
 unofficial client on a personal account: for low volume and a stop-gap.
 

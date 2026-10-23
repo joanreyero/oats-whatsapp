@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.1 (2026-10-23)
+
+From the reyero-oats maintainer's review of the first pin (reyero-oats#1):
+
+- wacli adapter: only messages sent from the phone are inbound (`wacli.from: phone`, default); a linked
+  device's message, any local `wacli send` included, is ignored by its id shape. The limit is stated in the
+  README, the skill and the inject: a shape, not a security boundary.
+- kapso adapter exercised against Kapso's documented webhook payloads (signed, unsigned, batched, a stranger)
+  with the CLI stubbed; media placeholders read `[image: caption]`.
+- `oats whatsapp send` reads stdin only with `--stdin`.
+- The manifest no longer declares `retirement.disposable.home` (nothing is written in the home).
+- README: the local API's trust model (same user on the host, `--instance` included) and a Status section.
+
 ## v0.1.0 (2026-10-23)
 
 First release. Capability `oats.whatsapp` (command `whatsapp`):

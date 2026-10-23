@@ -66,10 +66,10 @@ async function send(argv) {
   let text = arg(argv, "--text");
   const bodyFile = arg(argv, "--body-file");
   if (bodyFile) text = fs.readFileSync(bodyFile, "utf8");
-  if (text === undefined && !process.stdin.isTTY) text = fs.readFileSync(0, "utf8");
+  if (text === undefined && argv.includes("--stdin")) text = fs.readFileSync(0, "utf8");
   text = (text ?? "").replace(/\s+$/, "");
   if (!instance) fail("E_BAD_ARGS", "no instance: run from an instance home or pass --instance <name>");
-  if (!text) fail("E_BAD_ARGS", "nothing to send: --text <text>, --body-file <file> or stdin");
+  if (!text) fail("E_BAD_ARGS", "nothing to send: --text <text>, --body-file <file> or --stdin");
   let res;
   try { res = await request(settings.port, "POST", "/send", { instance, text }); }
   catch (e) { fail("E_BRIDGE_DOWN", `the WhatsApp bridge is not listening on 127.0.0.1:${settings.port} (${e.message}); on the host: systemctl --user status oats-whatsapp-bridge`); }

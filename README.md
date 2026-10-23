@@ -57,7 +57,7 @@ Pin the package and give a soul the capability:
 ```yaml
 # oats-workspace.yaml
 packages:
-  oats.whatsapp: git:github.com/joanreyero/oats-whatsapp@v0.1.1   # bare `v0.1.0` once listed in the official catalog
+  oats.whatsapp: git:github.com/joanreyero/oats-whatsapp@v0.1.1   # bare `v0.1.1` once listed in the official catalog
 # souls/<name>/soul.yaml
 capabilities:
   oats.whatsapp: { from: package }
